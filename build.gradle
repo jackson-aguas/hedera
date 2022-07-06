@@ -1,0 +1,59 @@
+plugins {
+	id 'org.springframework.boot' version '2.7.1'
+	id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+	id 'net.ltgt.errorprone' version '2.0.2'
+	id 'application'
+	id 'java'
+}
+
+group = 'com.accenture'
+version = '0.0.1-SNAPSHOT'
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'com.hedera.hashgraph:sdk:2.15.0'
+    implementation 'org.slf4j:slf4j-simple:1.7.36'
+    implementation 'io.grpc:grpc-netty-shaded:1.44.0'
+	implementation 'org.slf4j:slf4j-simple:2.0.0-alpha1'
+	implementation 'com.google.errorprone:error_prone_core:2.14.0'
+	errorprone 'com.google.errorprone:error_prone_core:2.14.0'
+    implementation 'io.github.cdimascio:java-dotenv:5.2.2'
+	implementation 'com.google.code.gson:gson:2.9.0'
+	runtimeOnly 'org.postgresql:postgresql'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+java {
+ sourceCompatibility = org.gradle.api.JavaVersion.VERSION_17
+ targetCompatibility = org.gradle.api.JavaVersion.VERSION_17
+}
+
+test {
+ useJUnitPlatform()
+}
+
+tasks.addRule("Pattern: run<Example>: Runs an example.") { String taskName ->
+    if (taskName.startsWith("run")) {
+        task(taskName, type: JavaExec) {
+            classpath = sourceSets.main.runtimeClasspath
+            main = (taskName - "run") + "Example"
+            standardInput(System.in)
+
+            // NOTE: Uncomment to enable trace logs in the SDK during development
+            jvmArgs "-Dorg.slf4j.simpleLogger.log.com.hedera.hashgraph=trace"
+        }
+    }
+}
+
+tasks.withType(JavaCompile).configureEach { 
+	options.errorprone {
+		disable("DefaultPackage")
+		disable("SystemOut")
+	}	
+}
+
+mainClassName = 'com.accenture.hedera.HederaApplication'
