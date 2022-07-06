@@ -14,8 +14,10 @@ import com.hedera.hashgraph.sdk.AccountInfoQuery;
 import com.hedera.hashgraph.sdk.AccountBalance;
 import com.hedera.hashgraph.sdk.AccountBalanceQuery;
 import com.hedera.hashgraph.sdk.TransactionId;
+import com.hedera.hashgraph.sdk.TransactionRecord;
 import com.hedera.hashgraph.sdk.TransactionReceipt;
 import com.hedera.hashgraph.sdk.TransactionResponse;
+import com.hedera.hashgraph.sdk.TransferTransaction;
 import com.hedera.hashgraph.sdk.AccountCreateTransaction;
 import com.hedera.hashgraph.sdk.AccountDeleteTransaction;
 
@@ -121,5 +123,61 @@ public class AccountService {
 
         System.out.println("deleted " + txn.accountId);
         return true;
+    }
+
+        /**
+     * Transfers hbar to a Hedera account
+     * 
+     * @param accountIdString - account to be deleted
+     * @param hbar - hbar to be transfered
+     * @return transaction record
+     */
+    public TransactionRecord transferHbar(String accountIdString, long hbar) throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
+
+        AccountId OPERATOR_ID = Objects.requireNonNull(EnvUtils.getOperatorId());
+        AccountId recipientId = AccountId.fromString(accountIdString);
+        Hbar amount = new Hbar(hbar);
+
+        Hbar senderBalanceBefore = new AccountBalanceQuery()
+            .setAccountId(OPERATOR_ID)
+            .execute(client)
+            .hbars;
+
+        Hbar receiptBalanceBefore = new AccountBalanceQuery()
+            .setAccountId(recipientId)
+            .execute(client)
+            .hbars;
+
+        System.out.println("" + OPERATOR_ID + " balance = " + senderBalanceBefore);
+        System.out.println("" + recipientId + " balance = " + receiptBalanceBefore);
+
+        TransactionResponse transactionResponse = new TransferTransaction()
+            // .addSender and .addRecipient can be called as many times as you want as long as the total sum from
+            // both sides is equivalent
+            .addHbarTransfer(OPERATOR_ID, amount.negated())
+            .addHbarTransfer(recipientId, amount)
+            .setTransactionMemo("transfer test")
+            .execute(client);
+
+        System.out.println("transaction ID: " + transactionResponse);
+
+        TransactionRecord record = transactionResponse.getRecord(client);
+
+        System.out.println("transferred " + amount + "...");
+
+        Hbar senderBalanceAfter = new AccountBalanceQuery()
+            .setAccountId(OPERATOR_ID)
+            .execute(client)
+            .hbars;
+
+        Hbar receiptBalanceAfter = new AccountBalanceQuery()
+            .setAccountId(recipientId)
+            .execute(client)
+            .hbars;
+
+        System.out.println("" + OPERATOR_ID + " balance = " + senderBalanceAfter);
+        System.out.println("" + recipientId + " balance = " + receiptBalanceAfter);
+        System.out.println("Transfer memo: " + record.transactionMemo);
+        return record;
     }
 }

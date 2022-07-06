@@ -3,6 +3,7 @@ package com.accenture.hedera.account;
 import com.accenture.hedera.account.models.Account;
 import com.hedera.hashgraph.sdk.AccountBalance;
 import com.hedera.hashgraph.sdk.AccountInfo;
+import com.hedera.hashgraph.sdk.TransactionRecord;
 import com.hedera.hashgraph.sdk.PrecheckStatusException;
 import com.hedera.hashgraph.sdk.ReceiptStatusException;
 import org.springframework.web.bind.annotation.*;
@@ -30,7 +31,7 @@ public class AccountController {
     //  * Hbar Transfer
     //  */
 
-    @PostMapping("/create")
+    @PostMapping("")
     public Account createAccount(@RequestParam(defaultValue = "0") long initialBalance) throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
         return accountService.createAccount(initialBalance);
     }
@@ -56,5 +57,10 @@ public class AccountController {
     @DeleteMapping("/{accountId}")
     public boolean deleteAccount(@PathVariable(value = "accountId") String accountId, @RequestParam(value = "privateKey") String privateKey) throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
         return accountService.deleteAccount(accountId, privateKey);
+    }
+
+    @PostMapping("/{accountId}")
+    public TransactionRecord transferHbar(@PathVariable(value = "accountId") String accountId, @RequestParam(value = "amount") long hbar) throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
+        return accountService.transferHbar(accountId, hbar);
     }
 }
