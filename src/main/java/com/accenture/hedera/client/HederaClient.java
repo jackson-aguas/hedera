@@ -1,20 +1,19 @@
 package com.accenture.hedera.client;
 
-import java.util.Collections;
 import com.hedera.hashgraph.sdk.PrivateKey;
 import com.hedera.hashgraph.sdk.AccountId;
 import com.hedera.hashgraph.sdk.Client;
-import com.hedera.hashgraph.sdk.Hbar;
 import com.accenture.hedera.utils.EnvUtils;
+
+import java.util.Collections;
 
 public class HederaClient {
     /**
-     * Create Singleton client instead of recreating everywhere
+     * Create singleton Hedera client 
      */
-    private static Client client = null;
+    private static Client client = createClient(EnvUtils.getOperatorId(), EnvUtils.getOperatorKey());
 
     private HederaClient() throws InterruptedException {
-        client = createClient(EnvUtils.getOperatorId(), EnvUtils.getOperatorKey());
         setMirrorNetwork();
     }
 
@@ -23,7 +22,7 @@ public class HederaClient {
             try {
                 new HederaClient();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                System.out.println(e);
             }
             
         }
@@ -32,16 +31,14 @@ public class HederaClient {
 
     public static Client createClient(AccountId opId, PrivateKey opKey) {
         //Create Hedera client
-        Client client = (EnvUtils.getHederaEnvironment() == EnvUtils.HederaEnvironment.TESTNET)
+        client = (EnvUtils.getHederaEnvironment() == EnvUtils.HederaEnvironment.TESTNET)
             ? Client.forTestnet() 
             : Client.forMainnet();
         client.setOperator(opId, opKey);
-        client.setDefaultMaxTransactionFee(new Hbar(6));
-        client.setDefaultMaxQueryPayment(new Hbar(3));
         return client;
     }
 
-    //Set Hedera mirror node for developments 
+    //Set Hedera mirror node for development 
     public static Client setMirrorNetwork() throws InterruptedException {
         if (client != null) {
             return client.setMirrorNetwork(Collections.singletonList(EnvUtils.getMirrorNodeAddress()));
@@ -50,5 +47,4 @@ public class HederaClient {
             return client.setMirrorNetwork(Collections.singletonList(EnvUtils.getMirrorNodeAddress()));
         }
     }
-    
 }

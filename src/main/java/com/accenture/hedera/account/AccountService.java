@@ -41,7 +41,7 @@ public class AccountService {
      * @param initialBalance - initial Balance on hedera
      * @return hedera accountId, hedera public and private key, solidity address
      */
-    public Account createAccount(long initialBalance) throws TimeoutException, ReceiptStatusException, PrecheckStatusException{
+    public Account createAccount(long initialBalance) throws TimeoutException, ReceiptStatusException, PrecheckStatusException { 
         // Generates new private key and dervives the public key
         PrivateKey newPrivateKey = PrivateKey.generateED25519();
         PublicKey newPublicKey = newPrivateKey.getPublicKey();
