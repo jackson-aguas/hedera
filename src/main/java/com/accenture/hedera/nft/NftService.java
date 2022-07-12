@@ -2,16 +2,17 @@ package com.accenture.hedera.nft;
 
 import com.accenture.hedera.utils.EnvUtils;
 import com.accenture.hedera.client.HederaClient;
-// import com.accenture.hedera.account.models.Account;
 
-// import com.hedera.hashgraph.sdk.Hbar;
 import com.hedera.hashgraph.sdk.Client;
 import com.hedera.hashgraph.sdk.AccountId;
 import com.hedera.hashgraph.sdk.PrivateKey;
 import com.hedera.hashgraph.sdk.TokenId;
 import com.hedera.hashgraph.sdk.TokenInfo;
 import com.hedera.hashgraph.sdk.TokenInfoQuery;
+import com.hedera.hashgraph.sdk.TokenNftInfo;
+import com.hedera.hashgraph.sdk.TokenNftInfoQuery;
 import com.hedera.hashgraph.sdk.TokenType;
+import com.hedera.hashgraph.sdk.TokenSupplyType;
 import com.hedera.hashgraph.sdk.TokenCreateTransaction;
 import com.hedera.hashgraph.sdk.TransactionResponse;
 
@@ -25,46 +26,36 @@ import java.util.concurrent.TimeoutException;
 
 @Service
 public class NftService {
-    
-       //Grab the singleton hedera client
-       public Client client = HederaClient.getHederaClient();
-       AccountId OPERATOR_ID = EnvUtils.getOperatorId();
-       PrivateKey OPERATOR_KEY = EnvUtils.getOperatorKey();
-   
-       //Create
-       public TokenId createNft(String name, String symbol) throws TimeoutException, ReceiptStatusException, PrecheckStatusException { 
-           TransactionResponse response = new TokenCreateTransaction()
-               .setTokenName(name)
-               .setTokenSymbol(symbol)
-               .setDecimals(3)
-               .setInitialSupply(100)
-               .setTreasuryAccountId(OPERATOR_ID)
-               .setAdminKey(OPERATOR_KEY.getPublicKey())
-               .setFreezeKey(OPERATOR_KEY.getPublicKey())
-               .setWipeKey(OPERATOR_KEY.getPublicKey())
-               .setKycKey(OPERATOR_KEY.getPublicKey())
-               .setSupplyKey(OPERATOR_KEY.getPublicKey())
-               .setTokenType(TokenType.NON_FUNGIBLE_UNIQUE)
-               .setFreezeDefault(false)
-               .execute(client);
-   
-           TokenId tokenId = Objects.requireNonNull(response.getReceipt(client).tokenId);
-           System.out.println("token id: " + tokenId);
-   
-           return tokenId;
-   
-       }
-   
-       //Read
-       public TokenInfo getNft(String tokenIdString) throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
-           TokenId tokenId = TokenId.fromString(tokenIdString);
-           TokenInfo tokenInfo = new TokenInfoQuery().setTokenId(tokenId).execute(client);
-           return tokenInfo;
-       }
 
-    //Read
+	// Grab the singleton hedera client
+	private Client client = HederaClient.getHederaClient();
+	private AccountId operatorId = EnvUtils.getOperatorId();
+	private PrivateKey operatorKey = EnvUtils.getOperatorKey();
 
-    //Update
+	// Create
+	public TokenId createNft(String name, String symbol)
+			throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
+		TransactionResponse response = new TokenCreateTransaction().setTokenName(name).setTokenSymbol(symbol)
+				.setDecimals(3).setInitialSupply(100).setTreasuryAccountId(operatorId)
+				.setAdminKey(operatorKey.getPublicKey()).setFreezeKey(operatorKey.getPublicKey())
+				.setWipeKey(operatorKey.getPublicKey()).setKycKey(operatorKey.getPublicKey())
+				.setSupplyKey(operatorKey.getPublicKey()).setTokenType(TokenType.NON_FUNGIBLE_UNIQUE)
+				.setSupplyType(TokenSupplyType.FINITE).setFreezeDefault(false).execute(client);
 
-    //Delete
+		TokenId tokenId = Objects.requireNonNull(response.getReceipt(client).tokenId);
+		System.out.println("token id: " + tokenId);
+		return tokenId;
+
+	}
+
+	// Read
+	public TokenInfo getNft(String tokenIdString)
+			throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
+		TokenId tokenId = TokenId.fromString(tokenIdString);
+		return new TokenInfoQuery().setTokenId(tokenId).execute(client);
+	}
+
+	// Update
+
+	// Delete
 }
