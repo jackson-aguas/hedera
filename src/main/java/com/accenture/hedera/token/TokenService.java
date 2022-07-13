@@ -5,18 +5,20 @@ import com.accenture.hedera.client.HederaClient;
 import com.accenture.hedera.account.AccountService;
 
 import com.hedera.hashgraph.sdk.Client;
+import com.hedera.hashgraph.sdk.Status;
 import com.hedera.hashgraph.sdk.AccountId;
 import com.hedera.hashgraph.sdk.AccountBalance;
 import com.hedera.hashgraph.sdk.PrivateKey;
-import com.hedera.hashgraph.sdk.Status;
 import com.hedera.hashgraph.sdk.TokenId;
+import com.hedera.hashgraph.sdk.TokenType;
 import com.hedera.hashgraph.sdk.TokenInfo;
 import com.hedera.hashgraph.sdk.TokenInfoQuery;
+import com.hedera.hashgraph.sdk.TokenMintTransaction;
 import com.hedera.hashgraph.sdk.TokenSupplyType;
-import com.hedera.hashgraph.sdk.TokenType;
 import com.hedera.hashgraph.sdk.TransactionReceipt;
 import com.hedera.hashgraph.sdk.TransactionResponse;
 import com.hedera.hashgraph.sdk.TransferTransaction;
+import com.hedera.hashgraph.sdk.TokenWipeTransaction;
 import com.hedera.hashgraph.sdk.TokenCreateTransaction;
 import com.hedera.hashgraph.sdk.TokenDeleteTransaction;
 import com.hedera.hashgraph.sdk.TokenGrantKycTransaction;
@@ -39,13 +41,14 @@ public class TokenService {
 	private AccountId operatorId = EnvUtils.getOperatorId();
 	private PrivateKey operatorKey = EnvUtils.getOperatorKey();
 
-	// Create
-	public TokenId createToken(String name, String symbol, String supply)
+	AccountService accountService = new AccountService();
+
+	// Create token
+	public TokenId createToken(String name, String symbol, long supply)
 			throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
 
-		long initialSupply = Long.parseLong(supply);
 		TransactionResponse response = new TokenCreateTransaction().setTokenName(name).setTokenSymbol(symbol)
-				.setTokenType(TokenType.FUNGIBLE_COMMON).setDecimals(3).setInitialSupply(initialSupply)
+				.setTokenType(TokenType.FUNGIBLE_COMMON).setDecimals(3).setInitialSupply(supply)
 				.setTreasuryAccountId(operatorId).setAdminKey(operatorKey.getPublicKey())
 				.setFreezeKey(operatorKey.getPublicKey()).setWipeKey(operatorKey.getPublicKey())
 				.setKycKey(operatorKey.getPublicKey()).setSupplyKey(operatorKey.getPublicKey()).setFreezeDefault(false)
@@ -53,15 +56,26 @@ public class TokenService {
 		return Objects.requireNonNull(response.getReceipt(client).tokenId);
 	}
 
-	// Read
-	public TokenInfo getToken(String tokenIdString)
-			throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
+	// Read token
+	public TokenInfo getToken(String tokenIdString) throws TimeoutException, PrecheckStatusException {
 
 		TokenId tokenId = TokenId.fromString(tokenIdString);
+
 		return Objects.requireNonNull(new TokenInfoQuery().setTokenId(tokenId).execute(client));
 	}
 
-	// Transfer
+	// Mint tokens
+	// Operator key is also the supply key (txn must be signed by supplyKey)
+	public TokenInfo mintToken(String tokenIdString, long amount) throws TimeoutException, PrecheckStatusException {
+
+		TokenId tokenId = TokenId.fromString(tokenIdString);
+		new TokenMintTransaction().setTokenId(tokenId).setAmount(amount).freezeWith(client).sign(operatorKey)
+				.execute(client);
+
+		return Objects.requireNonNull(new TokenInfoQuery().setTokenId(tokenId).execute(client));
+	}
+
+	// Transfer tokens
 	public boolean transferToken(String tokenIdString, String toAccountIdString, String toPrivateKeyString,
 			String amountString) throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
 
@@ -84,7 +98,7 @@ public class TokenService {
 		return receipt.status == Status.SUCCESS;
 	}
 
-	// Delete
+	// Delete token
 	public boolean deleteToken(String tokenIdString)
 			throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
 
@@ -96,11 +110,25 @@ public class TokenService {
 		return receipt.status == Status.SUCCESS;
 	}
 
+	// Wipe tokens from an account
+	// Operator key is also the wipe key (txn must be signed by both)
+	public boolean wipeToken(String tokenIdString, String accountIdString, long amount)
+			throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
+
+		TokenId tokenId = TokenId.fromString(tokenIdString);
+		AccountId accountId = AccountId.fromString(accountIdString);
+
+		TransactionReceipt receipt = new TokenWipeTransaction().setTokenId(tokenId).setAccountId(accountId)
+				.setAmount(amount).freezeWith(client).sign(operatorKey).sign(operatorKey).execute(client)
+				.getReceipt(client);
+
+		return receipt.status == Status.SUCCESS;
+	}
+
 	// Checks association status of account for a token
 	private boolean checkAssociationStatus(AccountId accountId, TokenId tokenId)
 			throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
 
-		AccountService accountService = new AccountService();
 		AccountBalance balance = accountService.getAccountBalance(accountId.toString());
 
 		return balance.tokens.get(tokenId) != null;

@@ -1,4 +1,4 @@
-package com.accenture.hedera.token.models;
+package com.accenture.hedera.models.token;
 
 import java.io.Serializable;
 
@@ -6,7 +6,7 @@ public class Create implements Serializable {
 
 	private String name;
 	private String symbol;
-	private String supply;
+	private long supply;
 	private String memo;
 
 	public Create() {
@@ -21,7 +21,7 @@ public class Create implements Serializable {
 		return symbol;
 	}
 
-	public String getSupply() {
+	public long getSupply() {
 		return supply;
 	}
 

@@ -1,6 +1,6 @@
 package com.accenture.hedera.account;
 
-import com.accenture.hedera.account.models.Account;
+import com.accenture.hedera.models.account.Account;
 import com.hedera.hashgraph.sdk.AccountBalance;
 import com.hedera.hashgraph.sdk.AccountInfo;
 import com.hedera.hashgraph.sdk.TransactionRecord;

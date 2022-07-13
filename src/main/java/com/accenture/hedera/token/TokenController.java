@@ -1,9 +1,8 @@
 package com.accenture.hedera.token;
 
-import com.accenture.hedera.token.models.*;
-
 import com.hedera.hashgraph.sdk.TokenId;
 import com.hedera.hashgraph.sdk.TokenInfo;
+import com.accenture.hedera.models.token.*;
 import com.hedera.hashgraph.sdk.PrecheckStatusException;
 import com.hedera.hashgraph.sdk.ReceiptStatusException;
 
@@ -33,6 +32,12 @@ public class TokenController {
 		return tokenService.getToken(tokenId);
 	}
 
+	@PostMapping(value = "/{tokenId}/mint", consumes = "application/json")
+	public TokenInfo transferToken(@PathVariable(name = "tokenId") String tokenId, @RequestBody Mint mint)
+			throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
+		return tokenService.mintToken(tokenId, mint.getAmount());
+	}
+
 	@PostMapping(value = "/{tokenId}/transfer", consumes = "application/json")
 	public boolean transferToken(@PathVariable(name = "tokenId") String tokenId, @RequestBody Transfer transfer)
 			throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
@@ -44,5 +49,11 @@ public class TokenController {
 	public boolean deleteToken(@PathVariable(value = "tokenId") String tokenId)
 			throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
 		return tokenService.deleteToken(tokenId);
+	}
+
+	@DeleteMapping(value = "/{tokenId}/wipe", consumes = "application/json")
+	public boolean transferToken(@PathVariable(name = "tokenId") String tokenId, @RequestBody Wipe wipe)
+			throws TimeoutException, ReceiptStatusException, PrecheckStatusException {
+		return tokenService.wipeToken(tokenId, wipe.getAccountId(), wipe.getAmount());
 	}
 }

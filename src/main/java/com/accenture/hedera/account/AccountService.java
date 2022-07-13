@@ -2,7 +2,7 @@ package com.accenture.hedera.account;
 
 import com.accenture.hedera.utils.EnvUtils;
 import com.accenture.hedera.client.HederaClient;
-import com.accenture.hedera.account.models.Account;
+import com.accenture.hedera.models.account.Account;
 
 import com.hedera.hashgraph.sdk.Hbar;
 import com.hedera.hashgraph.sdk.Client;

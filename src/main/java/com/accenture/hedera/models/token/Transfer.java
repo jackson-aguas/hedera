@@ -1,4 +1,4 @@
-package com.accenture.hedera.token.models;
+package com.accenture.hedera.models.token;
 
 import java.io.Serializable;
 
